@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+
+
+
+@section featured {
+
+    <audio autoplay loop>
+
+        <source src="~/HeroicTrials_ArenaTheme_FINAL.mp3" />
+
+    </audio>
+    <section class="featured">
+        <div class="content-wrapper">
+        </div>
+
+
+
+        <style>
+            #container
+            {
+                height: 540px;
+                width: 1400px;
+                cursor: move;
+            }
+        </style>
+
+
+
+
+        <script src="../Scripts/jquery-2.0.3.js"></script>
+        <script src="../Scripts/jquery-ui-1.10.3.js"></script>
+        <script src="../Scripts/jquery.signalR-1.1.3.js"></script>
+        <script src="/signalr/hubs"></script>
+        <script>
+            $(function () {
+          
+
+                var hub = $.connection.moveShape,
+                $shape = $("#shape");
+                $shape2 = $("#shape2");
+                var attackUp = true;
+                var attackDown = true;
+                var attackLeft = true;
+                var attackRight = true;
+
+                hub.client.shapeMoved = function (x, y) {
+                    $shape.css({ left: x, top: y} );
+                };
+
+                hub.client.shapeMoved2 = function (x, y) {
+                    $shape2.css({ left: x, top: y });
+                };
+                    
+                hub.client.getplayer = function (playerNumber) {
+
+                  
+                    function attack(event, ui) {
+                        var Player1Health = 100
+                        var Player2Health = 100
+                        var attack = $(".warriorAttackDown").collision(".attackable", {as: "<div/>"});
+                        if (playerNumber == 1 && attack == true) {
+                            Player2Health = Player2Health - 5;
+                            alert("attack");
+                        }
+
+                        if (playerNumber == 2 && attack == true) {
+                            Player1Health = Player2Health - 5;
+                        }
+                    }
+                    $(function () {
+
+                        $(".warriorAttackDown").each(function () { $(this).bind("attackstart", attack); })
+                    });
+
+                    if (playerNumber == 1) {
+                        var map = { 68: false, 83: false, 65: false, 87: false };
+                        document.getElementById('shape').focus()
+                        //mapping the keys, I done this so I can make hero move diagonal.
+                        
+
+                        $shape.bind('keydown', function (e) {
+                            
+
+                            //right downwards diagonal 
+                            if (e.keyCode in map) {
+                                map[e.keyCode] = true;
+                                if (map[68] && map[83] && map[87] == false && map[65] == false) {
+                                    document.getElementById("shape").className = "warriorRight";
+                                    if (jQuery('#shape').position().top + jQuery('#shape').height() < jQuery('.gameBody').height() && jQuery('#shape').position().left + jQuery('#shape').width() < jQuery('.gameBody').width()) {
+                                        hub.server.moveShape(this.offsetLeft += 10, this.offsetTop += 10);
+                                    }
+                                }
+                                //right Upwards diagonal 
+
+                                if (map[68] && map[87] && map[83] == false && map[65] == false) {
+                                    document.getElementById("shape").className = "warriorRight";
+                                    if (jQuery("#shape").position().left > 0 && jQuery('#shape').position().top > 0)
+                                        hub.server.moveShape(this.offsetLeft += 10, this.offsetTop -= 10);
+                                }
+                                //left Upwards diagonal 
+
+                                if (map[65] && map[87] && map[83] == false && map[68] == false) {
+                                    document.getElementById("shape").className = "warriorLeft";
+                                    if (jQuery("#shape").position().left > 0 && jQuery('#shape').position().top > 0)
+                                        hub.server.moveShape(this.offsetLeft -= 10, this.offsetTop -= 10);
+                                }
+
+
+                                //left downwards diagonal 
+                                if (map[65] && map[83] && map[87] == false && map[68] == false) {
+                                    if (jQuery('#shape').position().top + jQuery('#shape').height() < jQuery('.gameBody').height() && jQuery('#shape').position().left + jQuery('#shape').width() < jQuery('.gameBody').width()) {
+                                        hub.server.moveShape(this.offsetLeft -= 10, this.offsetTop += 10);
+                                    }
+                                }
+
+                                //down key press 83
+                                if (map[83] && map[68] == false && map[65] == false && map[87] == false) {
+                                    document.getElementById("shape").className = "shape";
+                                    attackDown = true;
+                                    attackUp = false;
+                                    if (jQuery("#shape").position().top + jQuery('#shape').height() < jQuery('.gameBody').height()) {
+                                    
+                                
+                                        hub.server.moveShape(this.offsetLeft || 0, this.offsetTop + 10);
+                                    }
+                                }
+                                //right key press 68
+                                if (map[68] && map[83] == false && map[65] == false && map[87] == false) {
+                                    document.getElementById("shape").className = "warriorRight";
+                                    attackRight = true;
+                                    attackLeft = false;
+                                    if (jQuery("#shape").position().left + jQuery('#shape').width() < jQuery('.gameBody').width()) {
+                                        hub.server.moveShape(this.offsetLeft + 10, this.offsetTop || 0);
+                                    }
+                                }
+                                //Left key press 65
+                                if (map[65] && map[87] == false && map[83] == false && map[68] == false) {
+                                    document.getElementById("shape").className = "warriorLeft";
+
+                                    if (jQuery("#shape").position().left > 5) {
+                                        hub.server.moveShape(this.offsetLeft - 10, this.offsetTop || 0);
+                                    }
+                                }
+                                //Up key press 87
+                                if (map[87] && map[65] == false && map[83] == false && map[68] == false) {
+                                    attackDown = false;
+                                    attackUp = true;
+                                    document.getElementById("shape").className = "warriorUp";
+
+                                    if (jQuery("#shape").position().top > 5) {
+                                        hub.server.moveShape(this.offsetLeft || 0, this.offsetTop - 10);
+                                    }
+                                }
+
+                            }
+
+                            //80 down Attack
+                            if (e.keyCode == 80 && attackDown == true) {
+                            
+
+                                document.getElementById("shape").className = "warriorAttackDown";
+                                document.getElementById("warriorUp").className = "warriorAttackDown";
+                                hub.server.moveShape(this.offsetLeft || 0, this.offsetTop - 10);
+
+                            }
+                            //80 up Attack
+                            if (e.keyCode == 80 && attackUp == true) {
+
+                                document.getElementById("shape").className = "warriorAttackUp";
+                                document.getElementById("warriorUp").className = "warriorAttackUp";
+                                hub.server.moveShape(this.offsetLeft || 0, this.offsetTop + 10);
+                            }
+                        
+
+                        });
+
+                    
+                        $shape.keyup(function (e) {
+                            if (e.keyCode in map) {
+                                map[e.keyCode] = false;
+
+                            }
+                        });
+
+
+
+                    }
+
+
+                    if (playerNumber == 2) {
+
+                        document.getElementById('shape2').focus()
+                        var map = { 68: false, 83: false, 65: false, 87: false };
+                        $shape2.bind('keydown', function (e) {
+
+
+                            if (e.keyCode in map) {
+                                map[e.keyCode] = true;
+                                //move left
+                                if (map[65] && map[87] == false && map[83] == false && map[68] == false) {
+                                    document.getElementById("shape2").className = "thiefLeft";
+                                    if (jQuery("#shape2").position().left > 5) {
+                                        hub.server.moveShape2(this.offsetLeft - 10, this.offsetTop || 0);
+                                    }
+                                }
+                                //move up
+                                if (map[87] && map[65] == false && map[83] == false && map[68] == false) {
+                                    document.getElementById("shape2").className = "thiefUp";
+                                    if (jQuery("#shape2").position().top > 5) {
+                                        hub.server.moveShape2(this.offsetLeft || 0, this.offsetTop - 10);
+                                    }
+                                }
+
+                                //down key press 83
+                                if (map[83] && map[68] == false && map[65] == false && map[87] == false) {
+                                    document.getElementById("shape2").className = "shape2";
+                                    if (jQuery("#shape2").position().top + jQuery('#shape2').height() < jQuery('.gameBody').height()) {
+                                        hub.server.moveShape2(this.offsetLeft || 0, this.offsetTop + 10);
+                                    }
+                                }
+                                //Move right 
+                                if (map[68] && map[83] == false && map[65] == false && map[87] == false) {
+                                    document.getElementById("shape2").className = "thiefRight";
+                                    if (jQuery("#shape2").position().left + jQuery('#shape2').width() < jQuery('.gameBody').width()) {
+                                        hub.server.moveShape2(this.offsetLeft + 10, this.offsetTop || 0);
+                                    }
+                                }
+                                
+           
+                            }
+                                             //80 down Attack
+                                        if (e.keyCode == 80 ) {
+
+                                    document.getElementById("shape2").className = "thiefAttackDown";
+                                    
+                                    hub.server.moveShape2(this.offsetLeft || 0, this.offsetTop - 10);
+
+                                }
+                            });
+                        $shape2.keyup(function (e) {
+                            if (e.keyCode in map) {
+                                map[e.keyCode] = false;
+
+                            }
+                        });
+                    }
+                        
+
+                    }
+
+                    $.connection.hub.start().done(function () {
+            
+              
+                    });
+                });
+
+        </script>
+
+
+<div id ="hpContainer">
+    <div id ="hpbar1"> </div>
+    <div id ="hpbar2"> </div>
+</div>
+        
+        <div class="gameBody">
+
+            <div id="container">
+                <div id="shape" class="shape attackable" tabindex="0"></div>
+
+
+                <div class="battlegif">
+                    <div id="shape2" class="shape2 attackable" tabindex="1"></div>
+                    <img src="~/images/Spinning_bullseye.gif" alt="This will display an animated GIF" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+}
+
+
+
+
+
